@@ -1,0 +1,8 @@
+black
+isort
+flake8
+pylint
+mypy
+types-Pygments
+types-aiofiles
+types-ujson

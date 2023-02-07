@@ -1,0 +1,20 @@
+version: "3.9"
+services:
+  blip-python-quickstart:
+    image: "blip-python-quickstart:latest"
+    user: "1000:1000"
+    tty: true
+    build:
+      context: ./python
+      dockerfile: Dockerfile
+    environment:
+      - "BLIP_API_KEY=${BLIP_API_KEY}"
+      - "BLIP_API_URL=${BLIP_API_URL-https://api.bliplabs.com/v2}"
+    ports:
+      - "127.0.0.1:20001:20001"
+    volumes:
+      - ./data:/src/data
+      - ./python/main.py:/src/main.py # helpful for live changes
+    networks:
+      default:
+    restart: unless-stopped
