@@ -78,6 +78,8 @@ Using the `curl` command, the commands below accomplish the following sequence:
 1. Wait for Blip to process those transactions and detect bills
 1. Get the processed bills from Blip
 
+> _Behind the scenes, persistent data will automatically be generated at `./data/sample_endusers.json` and `./sample_transactions.json`, if any of those two files do not exist. This gets triggered when you interact with the API via the below steps._
+
 ### (Automated) Automatic workflow
 
 The automatic workflow does the above steps all without any intervention. It is recommended to open the running container's logs in a separate window, as there will be live log output that will likely be more interesting than the data that gets returned by the `curl` command below.
