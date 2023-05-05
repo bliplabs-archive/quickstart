@@ -6,15 +6,171 @@ import json
 import time
 from os import getenv
 from typing import AsyncGenerator
-
 import httpx
 from aiofiles import open as aopen
 from fastapi import Depends, FastAPI
+import uuid
+from typing import List
+from dataclasses import dataclass
+from pathlib import Path
 
 app = FastAPI()
 
 api_key = getenv("BLIP_API_KEY", "")
 base_url = getenv("BLIP_API_URL", "")
+
+blip_data_prefix: str = "quickstart-"
+blip_account_name: str = "Blip Quickstart Credit Card"
+
+def _uuid_with_prefix(prefix: str = blip_data_prefix) -> str:
+    """Utility function to quickly generate a UUID prepended with the specified prefix.
+
+    Args:
+        prefix: The text to place in front of the UUID.
+            Defaults to a value like 'quickstart-'.
+
+    Returns:
+        _description_
+    """
+    return f'{prefix}{str(uuid.uuid4())}'
+
+@dataclass
+class Enduser:
+    oid: str
+
+@dataclass
+class Transaction:
+    account_name: str
+    account_oid: str
+    amount: float
+    date: str
+    enduser_oid: str
+    name: str
+    oid: str
+
+def _generate_endusers(n: int = 5) -> List[Enduser]:
+    """Generates a list of endusers, as a dataclass.
+
+    Args:
+        n: Integer number of endusers to generate. Defaults to 5.
+
+    Returns:
+        A list of endusers, as a dataclass.
+    """
+    return [Enduser(oid=_uuid_with_prefix()) for _ in range(n)]
+
+def _generate_sample_transactions(enduser_oid: str) -> List[Transaction]:
+    """Generates a list of 5 transactions that occur every month and associates them
+    with the provided `enduser_oid` ID value. Creates an `account_oid` value on the fly,
+    and associates all of the transactions with that account origin ID.
+
+    Args:
+        enduser_oid: The str value of the enduser's origin ID. Can be any string, but
+            it should be sufficiently random and unique.
+
+    Returns:
+        A list of transactions.
+    """
+    account_oid = _uuid_with_prefix()
+    transactions_data = [
+        {
+            "account_name": blip_account_name,
+            "amount": 10.00,
+            "date": "2019-08-24",
+            "name": "Netflix",
+        },
+        {
+            "account_name": blip_account_name,
+            "amount": 10.00,
+            "date": "2019-09-24",
+            "name": "Netflix",
+        },
+        {
+            "account_name": blip_account_name,
+            "amount": 10.00,
+            "date": "2019-10-24",
+            "name": "Netflix",
+        },
+        {
+            "account_name": blip_account_name,
+            "amount": 10.00,
+            "date": "2019-11-24",
+            "name": "Netflix",
+        },
+        {
+            "account_name": blip_account_name,
+            "amount": 10.00,
+            "date": "2019-12-24",
+            "name": "Netflix",
+        }
+    ]
+
+    transactions = [
+        Transaction(
+            account_name=data["account_name"],
+            account_oid=account_oid,
+            amount=data["amount"],
+            date=data["date"],
+            enduser_oid=enduser_oid,
+            name=data["name"],
+            oid=_uuid_with_prefix()
+        ) for data in transactions_data
+    ]
+
+    return transactions
+
+async def _write_endusers_to_file(endusers: List[Enduser], file_path: Path) -> None:
+    """Writes the provided list of endusers to the given file path.
+
+    Args:
+        endusers: List of endusers (as a dataclass) to write.
+        file_path: Pathlib path to write to.
+    """
+    endusers_dict = [enduser.__dict__ for enduser in endusers]
+
+    async with aopen(file_path, 'w') as f:
+        await f.write(json.dumps(endusers_dict, indent=4))
+
+async def _write_transactions_to_file(
+    transactions: List[Transaction],
+    file_path: Path
+) -> None:
+    """Writes the provided list of transactions to the given file path.
+
+    Args:
+        transactions: List of transactions (as a dataclass) to write.
+        file_path: Pathlib path to write to.
+    """
+    transactions_dict = [transaction.__dict__ for transaction in transactions]
+
+    async with aopen(file_path, 'w') as f:
+        await f.write(json.dumps(transactions_dict, indent=4))
+
+async def _generate_data_if_not_present(num_endusers: int = 5) -> None:
+    """Generates data under ./data/ so that you have something to push to Blip.
+
+    Args:
+        num_endusers: Number of endusers to generate. By default, the first enduser that
+            gets generated is the one that gets sample transactions. Defaults to 5.
+    """
+    data_path: Path = Path("data")
+    sample_transactions_path: Path = data_path / Path("sample_transactions.json")
+    sample_endusers_path: Path = data_path / Path("sample_endusers.json")
+
+    if not data_path.exists():
+        data_path.mkdir(parents=True)
+
+    if not sample_transactions_path.exists() or not sample_endusers_path.exists():
+        endusers = _generate_endusers(num_endusers)
+
+        # pick the first generated enduser origin id as the one that will have the
+        # credit card transactions
+        enduser_oid = endusers[0].oid
+
+        transactions = _generate_sample_transactions(enduser_oid)
+
+        await _write_endusers_to_file(endusers, sample_endusers_path)
+        await _write_transactions_to_file(transactions, sample_transactions_path)
 
 
 async def get_client() -> AsyncGenerator[httpx.AsyncClient, None]:
@@ -526,6 +682,7 @@ async def hello_world() -> dict:
     Returns:
         dict: Hello, world!
     """
+    await _generate_data_if_not_present()
     return {"Hello": "World"}
 
 
@@ -543,6 +700,7 @@ async def get_endusers_route(
     Returns:
         dict: The output of get_endusers
     """
+    await _generate_data_if_not_present()
     return await get_endusers(client)
 
 
@@ -560,6 +718,7 @@ async def create_endusers_route(
     Returns:
         dict: The output of create_endusers_command
     """
+    await _generate_data_if_not_present()
     return await create_endusers_command(client)
 
 
@@ -577,6 +736,7 @@ async def delete_endusers_route(
     Returns:
         dict: The output of delete_endusers_command
     """
+    await _generate_data_if_not_present()
     return await delete_endusers_command(client)
 
 
@@ -595,6 +755,7 @@ async def get_transactions_route(
     Returns:
         dict: The output of get_transactions
     """
+    await _generate_data_if_not_present()
     return await get_transactions(client)
 
 
@@ -613,6 +774,7 @@ async def create_transactions_route(
     Returns:
         dict: The output of create_transactions_command
     """
+    await _generate_data_if_not_present()
     return await create_transactions_command(client)
 
 
@@ -630,6 +792,7 @@ async def delete_transactions_route(
     Returns:
         list[dict]: The output of delete_transactions_command
     """
+    await _generate_data_if_not_present()
     return await delete_transactions_command(client)
 
 
@@ -647,6 +810,7 @@ async def get_bills_route(
     Returns:
         dict: The output of get_bills
     """
+    await _generate_data_if_not_present()
     return await get_bills(client)
 
 
@@ -667,6 +831,7 @@ async def get_bills_for_enduser_oid_route(
     Returns:
         dict: The output of get_bills_for_enduser
     """
+    await _generate_data_if_not_present()
     return await get_bills_for_enduser(client, enduser_oid)
 
 
@@ -685,6 +850,7 @@ async def delete_bills_route(
     Returns:
         list[dict]: The output of delete_bills_command
     """
+    await _generate_data_if_not_present()
     return await delete_bills_command(client)
 
 
@@ -702,6 +868,7 @@ async def reset_route(client: httpx.AsyncClient = Depends(get_client)) -> dict:
     Returns:
         dict: The output from delete_all_command
     """
+    await _generate_data_if_not_present()
     return await delete_all_command(client)
 
 
@@ -720,4 +887,5 @@ async def do_flow_route(
     Returns:
         dict: The output from workflow_command
     """
+    await _generate_data_if_not_present()
     return await workflow_command(client)
