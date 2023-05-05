@@ -12,7 +12,7 @@ services:
     ports:
       - "127.0.0.1:20001:20001"
     volumes:
-      - ./data:/src/data:rw,
+      - ./data:/src/data:rw,z
       - ./python/main.py:/src/main.py:rw,z # helpful for live changes
     networks:
       default:
