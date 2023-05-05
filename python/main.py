@@ -19,6 +19,21 @@ app = FastAPI()
 api_key = getenv("BLIP_API_KEY", "")
 base_url = getenv("BLIP_API_URL", "")
 
+blip_data_prefix: str = "quickstart-"
+blip_account_name: str = "Blip Quickstart Credit Card"
+
+def _uuid_with_prefix(prefix: str = blip_data_prefix) -> str:
+    """Utility function to quickly generate a UUID prepended with the specified prefix.
+
+    Args:
+        prefix: The text to place in front of the UUID.
+            Defaults to a value like 'quickstart-'.
+
+    Returns:
+        _description_
+    """
+    return f'{prefix}{str(uuid.uuid4())}'
+
 @dataclass
 class Enduser:
     oid: str
@@ -42,7 +57,7 @@ def _generate_endusers(n: int = 5) -> List[Enduser]:
     Returns:
         A list of endusers, as a dataclass.
     """
-    return [Enduser(oid=str(uuid.uuid4())) for _ in range(n)]
+    return [Enduser(oid=_uuid_with_prefix()) for _ in range(n)]
 
 def _generate_sample_transactions(enduser_oid: str) -> List[Transaction]:
     """Generates a list of 5 transactions that occur every month and associates them
@@ -56,34 +71,34 @@ def _generate_sample_transactions(enduser_oid: str) -> List[Transaction]:
     Returns:
         A list of transactions.
     """
-    account_oid = str(uuid.uuid4())
+    account_oid = _uuid_with_prefix()
     transactions_data = [
         {
-            "account_name": "A Credit Card",
+            "account_name": blip_account_name,
             "amount": 10.00,
             "date": "2019-08-24",
             "name": "Netflix",
         },
         {
-            "account_name": "A Credit Card",
+            "account_name": blip_account_name,
             "amount": 10.00,
             "date": "2019-09-24",
             "name": "Netflix",
         },
         {
-            "account_name": "A Credit Card",
+            "account_name": blip_account_name,
             "amount": 10.00,
             "date": "2019-10-24",
             "name": "Netflix",
         },
         {
-            "account_name": "A Credit Card",
+            "account_name": blip_account_name,
             "amount": 10.00,
             "date": "2019-11-24",
             "name": "Netflix",
         },
         {
-            "account_name": "A Credit Card",
+            "account_name": blip_account_name,
             "amount": 10.00,
             "date": "2019-12-24",
             "name": "Netflix",
@@ -98,7 +113,7 @@ def _generate_sample_transactions(enduser_oid: str) -> List[Transaction]:
             date=data["date"],
             enduser_oid=enduser_oid,
             name=data["name"],
-            oid=str(uuid.uuid4())
+            oid=_uuid_with_prefix()
         ) for data in transactions_data
     ]
 
