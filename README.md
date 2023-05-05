@@ -20,9 +20,6 @@ This repository contains a fast and simple quickstart for writing software that 
       - [3. Check if Blip identified any bills from the transactions](#3-check-if-blip-identified-any-bills-from-the-transactions)
       - [4. Done! Reset and delete the data we just added](#4-done-reset-and-delete-the-data-we-just-added)
     - [Summary](#summary)
-  - [Development](#development)
-    - [Python development environment setup](#python-development-environment-setup)
-      - [Python vscode setup](#python-vscode-setup)
 
 ## Blazing fast quickstart
 
@@ -62,12 +59,12 @@ Populate the contents of your new `.env` with API keys and any other values. Eac
 
 ## 3. Run with Docker
 
-In the below steps, `docker-compose` is used as the default - depending on how your system is configured, `docker compose` may be preferred.
+In the below steps, `docker compose` is used as the default - depending on how your system is configured, `docker-compose` may be preferred.
 
 ```bash
-docker-compose build
-docker-compose up -d
-docker-compose logs -f
+docker compose build
+docker compose up -d
+docker compose logs -f
 ```
 
 ## 4. Interact
@@ -186,52 +183,3 @@ curl -v http://localhost:20001/endusers/delete
 In just a few steps, we've manually added endusers, transactions, and a bill to Blip.
 
 This quickstart guide is an example of how you can successfully interact with the Blip API for your future projects. The `localhost:20001` API is just a wrapper to help you execute a few prepared commands with Blip, and should serve as a guide for the way Blip is meant to be used.
-
-## Development
-
-For developers that wish to go further with this quickstart, follow the below instructions according to each programming language or framework below.
-
-### Python development environment setup
-
-```bash
-cd python
-python3 -m venv .venv
-source .venv/bin/activate # may vary slightly on different platforms
-pip3 install -r requirements.txt
-pip3 install -r requirements-dev.txt
-```
-
-For linting and type checking, you can run the following tools from the `./python` directory:
-
-```bash
-black main.py # autoformats main.py
-isort main.py # sorts imports in main.py
-flake8 main.py # linting
-pylint main.py # more linting
-
-# mypy provides type checking and more in-depth code analysis, may ask to
-# install packages that provide type annotations
-MYPYPATH=.venv mypy --install-types --python-executable .venv/bin/python3 main.py
-```
-
-#### Python vscode setup
-
-We aim to be platform-agnostic where possible, but a few of us at Blip do use Visual Studio Code, and felt it would only benefit the community to share a working IDE configuration for this quickstart.
-
-After setting up the virtual environment according to the steps outlined in the previous section, populate `.vscode/settings.json` with the following - note that `${workspaceFolder}` _does not need to be changed_, it is a variable that is evaluated by vscode:
-
-```json
-{
-    "python.linting.enabled": true,
-    "python.linting.pylintEnabled": true,
-    "python.linting.flake8Enabled": true,
-    "python.linting.cwd": "${workspaceFolder}/python",
-    "editor.formatOnSave": true,
-    "python.linting.flake8Args": [
-        "--config",
-        "${workspaceFolder}/python/.flake8"
-    ],
-    "python.defaultInterpreterPath": "${workspaceFolder}/python/.venv/bin/python3",
-    "python.formatting.provider": "black"
-}
-```
